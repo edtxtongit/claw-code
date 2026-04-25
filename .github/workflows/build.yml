@@ -1,0 +1,40 @@
+name: 跨平台编译
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    name: 编译 - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # 同时定义 Linux 和 Windows 环境
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Rust 工具链
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 编译项目
+        run: |
+          cd rust
+          cargo build --release
+
+      - name: 上传制品 (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: claw-linux
+          path: rust/target/release/claw
+
+      - name: 上传制品 (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: claw-windows
+          path: rust/target/release/claw.exe
